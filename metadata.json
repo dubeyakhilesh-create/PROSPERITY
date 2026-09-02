@@ -1,0 +1,6 @@
+{
+  "name": "PROSPERITY",
+  "description": "PROSPERITY — An intelligent AI assistant powered by Gemini for answering questions, coding assistance, multimodal image analysis, and creative ideation.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

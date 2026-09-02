@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PROSPERITY</title>
+    <meta name="application-name" content="PROSPERITY" />
+    <meta name="apple-mobile-web-app-title" content="PROSPERITY" />
+    <meta name="description" content="PROSPERITY is an intelligent AI assistant powered by Gemini for answering questions, coding assistance, multimodal image analysis, and creative ideation." />
+    <meta property="og:title" content="PROSPERITY" />
+    <meta property="og:description" content="PROSPERITY is an intelligent AI assistant powered by Gemini for answering questions, coding assistance, multimodal image analysis, and creative ideation." />
+    <meta property="og:site_name" content="PROSPERITY" />
+    <meta name="twitter:title" content="PROSPERITY" />
+    <meta name="twitter:description" content="PROSPERITY is an intelligent AI assistant powered by Gemini for answering questions, coding assistance, multimodal image analysis, and creative ideation." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="theme-color" content="#09090b" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="alternate" type="application/manifest+json" href="/manifest.webmanifest" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  </head>
+  <body class="bg-neutral-950 text-neutral-100 antialiased selection:bg-indigo-500/30 selection:text-indigo-200">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/sw.js', { scope: '/' })
+            .then(function(registration) {
+              console.log('PROSPERITY ServiceWorker registered with scope:', registration.scope);
+            })
+            .catch(function(error) {
+              console.error('PROSPERITY ServiceWorker registration failed:', error);
+            });
+        });
+      }
+    </script>
+  </body>
+</html>
+
