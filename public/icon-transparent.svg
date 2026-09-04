@@ -20,9 +20,6 @@
   </defs>
 
   
-  <rect width="512" height="512" rx="96" fill="url(#sqBgGrad)" />
-  <rect width="504" height="504" x="4" y="4" rx="92" fill="none" stroke="#38BDF8" stroke-opacity="0.35" stroke-width="8" />
-  
 
   <!-- Letterform Logo: Big, high-impact PROSPERITY AI -->
   <g transform="translate(256, 212)">

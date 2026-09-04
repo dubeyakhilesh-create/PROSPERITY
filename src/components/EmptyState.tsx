@@ -1,5 +1,6 @@
 import React from 'react';
 import { Persona } from '../types';
+import { ProsperityEmblem, ProsperityHorizontalLogo } from './ProsperityLogo';
 import {
   Sparkles,
   Code2,
@@ -7,6 +8,8 @@ import {
   BarChart3,
   GraduationCap,
   Zap,
+  Heart,
+  HeartHandshake,
   ArrowRight,
   Globe,
   Image as ImageIcon,
@@ -21,6 +24,8 @@ interface EmptyStateProps {
 
 const PERSONA_ICONS: Record<string, React.ElementType> = {
   Sparkles,
+  Heart,
+  HeartHandshake,
   Code2,
   Feather,
   BarChart3,
@@ -37,19 +42,27 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
 
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 py-8 text-center">
-      {/* AI Aura Badge */}
-      <div className="relative mb-6">
-        <div className="absolute -inset-2 rounded-2xl bg-gradient-to-r from-indigo-500/20 via-purple-500/20 to-cyan-500/20 blur-xl" />
-        <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl border border-neutral-800 bg-gradient-to-b from-neutral-800 to-neutral-900 shadow-2xl ring-1 ring-white/10">
-          <IconComponent className="h-8 w-8 text-indigo-400" />
+      {/* AI Aura Emblem Badge (Demanded 1:1 Ratio) */}
+      <div className="relative mb-5">
+        <div className="absolute -inset-4 rounded-3xl bg-gradient-to-r from-sky-500/25 via-blue-500/25 to-indigo-500/25 blur-2xl animate-pulse" />
+        <div className="relative">
+          <ProsperityEmblem
+            size="2xl"
+            className="!h-28 !w-28 sm:!h-32 sm:!w-32 shadow-2xl drop-shadow-[0_8px_32px_rgba(56,189,248,0.35)]"
+          />
         </div>
       </div>
 
+      {/* Horizontal Wordmark in Demanded 4:1 Ratio */}
+      <div className="mb-4">
+        <ProsperityHorizontalLogo className="h-10 sm:h-12 w-auto max-w-[280px] sm:max-w-[340px]" />
+      </div>
+
       {/* Title & Description */}
-      <h1 className="text-2xl font-bold tracking-tight text-neutral-100 sm:text-3xl">
+      <h1 className="text-xl font-bold tracking-tight text-neutral-200 sm:text-2xl">
         {currentPersona.name}
       </h1>
-      <p className="mt-1 text-sm font-medium text-indigo-400">
+      <p className="mt-1 text-sm font-medium text-sky-400">
         {currentPersona.roleTitle}
       </p>
       <p className="mx-auto mt-2 max-w-lg text-sm text-neutral-400 leading-relaxed">
@@ -59,8 +72,8 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
       {/* Feature Capabilities Pills */}
       <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
         <span className="inline-flex items-center gap-1.5 rounded-full border border-neutral-800 bg-neutral-900/80 px-3 py-1 text-xs font-medium text-neutral-300">
-          <Cpu className="h-3 w-3 text-indigo-400" />
-          Gemini 3.7 Flash
+          <Cpu className="h-3 w-3 text-emerald-400" />
+          Gemini 3.8 Flash (Ultra-Fast)
         </span>
         <span className="inline-flex items-center gap-1.5 rounded-full border border-neutral-800 bg-neutral-900/80 px-3 py-1 text-xs font-medium text-neutral-300">
           <ImageIcon className="h-3 w-3 text-purple-400" />
@@ -68,7 +81,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
         </span>
         <span className="inline-flex items-center gap-1.5 rounded-full border border-neutral-800 bg-neutral-900/80 px-3 py-1 text-xs font-medium text-neutral-300">
           <Globe className="h-3 w-3 text-cyan-400" />
-          Live Google Search
+          Live Google Search Grounding
         </span>
       </div>
 

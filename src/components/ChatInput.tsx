@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect, ChangeEvent, KeyboardEvent } from 'react';
-import { Attachment } from '../types';
+import { Attachment, CapabilityMode } from '../types';
 import { fileToBase64, generateId, readTextFile } from '../lib/utils';
+import { CAPABILITY_MODES } from '../lib/constants';
+import { ProsperityEmblem } from './ProsperityLogo';
 import {
   ArrowUp,
   Square,
@@ -12,6 +14,10 @@ import {
   X,
   FileCode,
   Sparkles,
+  Zap,
+  Brain,
+  Code2,
+  Loader2,
 } from 'lucide-react';
 
 interface ChatInputProps {
@@ -20,6 +26,8 @@ interface ChatInputProps {
   isStreaming: boolean;
   enableSearchGrounding: boolean;
   onToggleSearchGrounding: () => void;
+  capabilityMode?: CapabilityMode;
+  onSelectCapabilityMode?: (mode: CapabilityMode) => void;
   initialPrompt?: string;
   onClearInitialPrompt?: () => void;
 }
@@ -30,6 +38,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   isStreaming,
   enableSearchGrounding,
   onToggleSearchGrounding,
+  capabilityMode = 'turbo',
+  onSelectCapabilityMode,
   initialPrompt = '',
   onClearInitialPrompt,
 }) => {
@@ -37,6 +47,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [isEnhancing, setIsEnhancing] = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -61,6 +72,27 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       textareaRef.current.style.height = `${Math.min(scrollHeight, 220)}px`;
     }
   }, [input]);
+
+  // Magic Prompt Enhancer (Meta AI / Grok style)
+  const handleEnhancePrompt = async () => {
+    if (!input.trim() || isEnhancing) return;
+    setIsEnhancing(true);
+    try {
+      const res = await fetch('/api/gemini/enhance-prompt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: input }),
+      });
+      const data = await res.json();
+      if (data.enhancedPrompt) {
+        setInput(data.enhancedPrompt);
+      }
+    } catch (err) {
+      console.error('Failed to enhance prompt:', err);
+    } finally {
+      setIsEnhancing(false);
+    }
+  };
 
   // Voice speech-to-text setup
   useEffect(() => {
@@ -245,6 +277,31 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         </div>
       )}
 
+      {/* Mode Selector Chips (Turbo / Deep Reasoning / Live Web / Code) */}
+      {onSelectCapabilityMode && (
+        <div className="mb-2 flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+          {CAPABILITY_MODES.map((mode) => {
+            const isSelected = capabilityMode === mode.id;
+            return (
+              <button
+                key={mode.id}
+                type="button"
+                onClick={() => onSelectCapabilityMode(mode.id)}
+                className={`flex items-center gap-1.5 rounded-xl px-2.5 py-1 font-medium transition-all ${
+                  isSelected
+                    ? 'bg-indigo-600/30 text-indigo-300 border border-indigo-500/50 shadow-sm shadow-indigo-500/20 ring-1 ring-indigo-400/30'
+                    : 'border border-neutral-800/80 bg-neutral-900/60 text-neutral-400 hover:border-neutral-700 hover:text-neutral-200'
+                }`}
+                title={mode.description}
+              >
+                <span>{mode.badge}</span>
+                <span className="hidden sm:inline text-[11px] font-semibold">{mode.name}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {/* Main Container */}
       <div className="relative rounded-2xl border border-neutral-800 bg-neutral-900/95 shadow-2xl shadow-black/40 ring-1 ring-white/5 transition-all focus-within:border-indigo-500/80 focus-within:ring-2 focus-within:ring-indigo-500/20">
         {/* Attachments Bar */}
@@ -346,6 +403,25 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               {isRecording ? <MicOff className="h-4 w-4 text-rose-400" /> : <Mic className="h-4 w-4" />}
               <span className="hidden sm:inline">{isRecording ? 'Listening...' : 'Voice'}</span>
             </button>
+
+            {/* Magic Prompt Enhancer Button */}
+            {input.trim().length > 3 && (
+              <button
+                id="enhance-prompt-btn"
+                type="button"
+                onClick={handleEnhancePrompt}
+                disabled={isEnhancing}
+                className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-purple-300 bg-purple-950/60 border border-purple-800/50 hover:bg-purple-900/60 hover:text-purple-200 transition-all shadow-sm"
+                title="Supercharge prompt with context & constraints (Meta AI / Grok style)"
+              >
+                {isEnhancing ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin text-purple-300" />
+                ) : (
+                  <Sparkles className="h-3.5 w-3.5 text-purple-400" />
+                )}
+                <span className="hidden sm:inline">{isEnhancing ? 'Enhancing...' : 'Enhance'}</span>
+              </button>
+            )}
           </div>
 
           {/* Right Controls */}
@@ -387,9 +463,10 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       </div>
 
       <div className="mt-2 flex items-center justify-between px-2 text-[11px] text-neutral-500">
-        <span className="flex items-center gap-1">
-          <Sparkles className="h-3 w-3 text-indigo-400" />
-          <span>PROSPERITY · Gemini 3.7 Flash</span>
+        <span className="flex items-center gap-2">
+          <ProsperityEmblem size="xs" className="!h-5 !w-5" />
+          <span className="font-bold text-neutral-200">PROSPERITY AI</span>
+          <span className="text-neutral-500">· Gemini 3.8 Flash (Ultra-Fast)</span>
         </span>
         <span className="hidden sm:inline">
           Use <kbd className="rounded bg-neutral-800 px-1 py-0.5 text-neutral-400">Shift + Enter</kbd> for new line

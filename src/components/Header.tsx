@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Conversation, Persona } from '../types';
 import { PERSONAS } from '../lib/constants';
+import { ProsperityEmblem, ProsperityHorizontalLogo } from './ProsperityLogo';
 import {
   Menu,
   PanelLeftOpen,
@@ -65,7 +66,20 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
         )}
 
-        <div className="min-w-0 flex-1">
+        {/* App Emblem & Letterform in Header */}
+        <div className="flex items-center gap-2.5">
+          <ProsperityEmblem size="sm" className="!h-9 !w-9" />
+          <div className="hidden sm:flex flex-col">
+            <span className="text-xs font-black tracking-wider text-neutral-100 leading-tight">
+              PROSPERITY
+            </span>
+            <span className="text-[10px] font-black tracking-widest text-sky-400 leading-none">
+              AI
+            </span>
+          </div>
+        </div>
+
+        <div className="min-w-0 flex-1 pl-1">
           <h2 className="truncate text-sm font-semibold text-neutral-200">
             {conversation ? conversation.title : 'New Chat'}
           </h2>
@@ -79,9 +93,9 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             id="persona-selector-btn"
             onClick={() => setPersonaMenuOpen(!personaMenuOpen)}
-            className="flex items-center gap-1.5 rounded-xl border border-neutral-800 bg-neutral-900 px-2.5 py-1.5 text-xs font-medium text-neutral-300 shadow-sm transition-all hover:border-neutral-700 hover:bg-neutral-800 hover:text-white"
+            className="flex items-center gap-2 rounded-xl border border-neutral-800 bg-neutral-900 px-2.5 py-1.5 text-xs font-medium text-neutral-300 shadow-sm transition-all hover:border-neutral-700 hover:bg-neutral-800 hover:text-white"
           >
-            <Sparkles className="h-3.5 w-3.5 text-indigo-400" />
+            <ProsperityEmblem size="xs" className="!h-5 !w-5" hasBorder={false} />
             <span className="hidden sm:inline max-w-[120px] truncate">{currentPersona.name}</span>
             <ChevronDown className="h-3 w-3 text-neutral-400" />
           </button>
@@ -110,8 +124,8 @@ export const Header: React.FC<HeaderProps> = ({
                           : 'text-neutral-300 hover:bg-neutral-800'
                       }`}
                     >
-                      <div className="mt-0.5 rounded-md bg-neutral-800 p-1 text-indigo-400">
-                        <Sparkles className="h-3 w-3" />
+                      <div className="mt-0.5 shrink-0">
+                        <ProsperityEmblem size="xs" className="!h-6 !w-6" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="font-semibold text-neutral-200">{persona.name}</p>
@@ -126,6 +140,12 @@ export const Header: React.FC<HeaderProps> = ({
             </>
           )}
         </div>
+
+        {/* Model Engine Status Badge */}
+        <span className="hidden lg:inline-flex items-center gap-1.5 rounded-xl border border-neutral-800 bg-neutral-900/80 px-2.5 py-1 text-[11px] font-medium text-neutral-300">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="font-semibold text-neutral-200">Gemini 3.8 Flash</span>
+        </span>
 
         {/* Web Search Grounding Status Badge */}
         {conversation?.settings?.enableSearchGrounding && (

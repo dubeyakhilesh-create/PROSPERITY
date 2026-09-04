@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Conversation, Message, Attachment, ModelSettings, Persona } from './types';
+import { Conversation, Message, Attachment, ModelSettings, Persona, CapabilityMode } from './types';
 import { PERSONAS, DEFAULT_MODEL_SETTINGS } from './lib/constants';
 import { generateId, exportConversationAsMarkdown, exportConversationAsJSON, stopSpeaking } from './lib/utils';
 import { Header } from './components/Header';
@@ -39,7 +39,14 @@ export default function App() {
   const [globalSettings, setGlobalSettings] = useState<ModelSettings>(() => {
     try {
       const saved = localStorage.getItem(SETTINGS_KEY);
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return {
+          ...DEFAULT_MODEL_SETTINGS,
+          ...parsed,
+          model: parsed.model === 'gemini-3.8-flash' ? 'gemini-3.1-flash-lite' : (parsed.model || 'gemini-3.1-flash-lite'),
+        };
+      }
     } catch (e) {}
     return DEFAULT_MODEL_SETTINGS;
   });
@@ -210,6 +217,51 @@ export default function App() {
     );
   };
 
+  // Switch Capability Mode (Turbo, Deep Reasoning, Live Web, Code)
+  const handleSelectCapabilityMode = (mode: CapabilityMode) => {
+    if (!activeConversation) return;
+
+    let updatedSettings: ModelSettings = {
+      ...activeConversation.settings,
+      capabilityMode: mode,
+    };
+
+    if (mode === 'turbo') {
+      updatedSettings = {
+        ...updatedSettings,
+        temperature: 0.8,
+        thinkingLevel: 'DEFAULT',
+        enableSearchGrounding: false,
+      };
+    } else if (mode === 'reasoning') {
+      updatedSettings = {
+        ...updatedSettings,
+        temperature: 0.7,
+        thinkingLevel: 'HIGH',
+        enableSearchGrounding: false,
+      };
+    } else if (mode === 'web') {
+      updatedSettings = {
+        ...updatedSettings,
+        temperature: 0.75,
+        enableSearchGrounding: true,
+      };
+    } else if (mode === 'code') {
+      updatedSettings = {
+        ...updatedSettings,
+        temperature: 0.25,
+        thinkingLevel: 'HIGH',
+        enableSearchGrounding: false,
+      };
+    }
+
+    setConversations((prev) =>
+      prev.map((c) =>
+        c.id === activeConversation.id ? { ...c, settings: updatedSettings } : c
+      )
+    );
+  };
+
   // Stop Streaming
   const handleStopStreaming = () => {
     if (abortControllerRef.current) {
@@ -271,7 +323,7 @@ export default function App() {
       content: '',
       timestamp: Date.now(),
       isStreaming: true,
-      modelUsed: 'gemini-3.7-flash',
+      modelUsed: 'gemini-3.8-flash',
     };
 
     const isFirstMessage = currentConv.messages.length === 0;
@@ -295,6 +347,7 @@ export default function App() {
 
     const controller = new AbortController();
     abortControllerRef.current = controller;
+    const streamStartTime = Date.now();
 
     // Auto generate title if first message
     if (isFirstMessage && content) {
@@ -334,6 +387,7 @@ export default function App() {
           temperature: settings.temperature ?? persona.temperature,
           useSearchGrounding: settings.enableSearchGrounding,
           thinkingLevel: settings.thinkingLevel !== 'DEFAULT' ? settings.thinkingLevel : undefined,
+          model: settings.model || 'gemini-3.1-flash-lite',
         }),
       });
 
@@ -349,6 +403,7 @@ export default function App() {
       const reader = response.body.getReader();
       const decoder = new TextDecoder('utf-8');
       let accumulatedText = '';
+      let accumulatedThought = '';
       let latestGroundingMetadata: any = null;
       let buffer = '';
 
@@ -373,6 +428,9 @@ export default function App() {
               if (parsed.error) {
                 throw new Error(parsed.error);
               }
+              if (parsed.thought) {
+                accumulatedThought += parsed.thought;
+              }
               if (parsed.text) {
                 accumulatedText += parsed.text;
               }
@@ -389,6 +447,7 @@ export default function App() {
                       return {
                         ...m,
                         content: accumulatedText,
+                        thought: accumulatedThought || undefined,
                         groundingMetadata: latestGroundingMetadata || m.groundingMetadata,
                         isStreaming: true,
                       };
@@ -405,6 +464,8 @@ export default function App() {
         }
       }
 
+      const durationMs = Date.now() - streamStartTime;
+
       // Finalize assistant message
       setConversations((prev) =>
         prev.map((c) => {
@@ -414,7 +475,9 @@ export default function App() {
               return {
                 ...m,
                 content: accumulatedText,
+                thought: accumulatedThought || undefined,
                 groundingMetadata: latestGroundingMetadata || m.groundingMetadata,
+                generationDurationMs: durationMs,
                 isStreaming: false,
               };
             }
@@ -423,6 +486,39 @@ export default function App() {
           return { ...c, messages: msgs };
         })
       );
+
+      // Proactively fetch smart follow-up suggestions (ChatGPT/Grok/Google style)
+      if (accumulatedText.length > 25) {
+        fetch('/api/gemini/suggest-followups', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userPrompt: content,
+            assistantResponse: accumulatedText.slice(0, 600),
+          }),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.followUps && Array.isArray(data.followUps) && data.followUps.length > 0) {
+              setConversations((prev) =>
+                prev.map((c) => {
+                  if (c.id !== targetConvId) return c;
+                  const msgs = c.messages.map((m) => {
+                    if (m.id === assistantPlaceholderId) {
+                      return {
+                        ...m,
+                        suggestedFollowUps: data.followUps,
+                      };
+                    }
+                    return m;
+                  });
+                  return { ...c, messages: msgs };
+                })
+              );
+            }
+          })
+          .catch((e) => console.warn('Follow-up generation error:', e));
+      }
     } catch (err: any) {
       if (err.name === 'AbortError') {
         console.log('Stream generation was aborted by user.');
@@ -557,6 +653,7 @@ export default function App() {
                       : undefined
                   }
                   onEditPrompt={message.role === 'user' ? handleEditPrompt : undefined}
+                  onSelectFollowUp={(query) => handleSendMessage(query)}
                 />
               ))}
               <div ref={messagesEndRef} className="h-6" />
@@ -576,6 +673,12 @@ export default function App() {
                 : globalSettings.enableSearchGrounding
             }
             onToggleSearchGrounding={handleToggleSearchGrounding}
+            capabilityMode={
+              activeConversation?.settings?.capabilityMode ||
+              globalSettings.capabilityMode ||
+              'turbo'
+            }
+            onSelectCapabilityMode={handleSelectCapabilityMode}
             initialPrompt={initialPrompt}
             onClearInitialPrompt={() => setInitialPrompt('')}
           />

@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Conversation } from '../types';
 import { PERSONAS } from '../lib/constants';
+import { ProsperityEmblem } from './ProsperityLogo';
 import {
   Plus,
   MessageSquare,
@@ -230,13 +231,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Top Header */}
       <div className="p-3">
         <div className="flex items-center justify-between pb-3">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-tr from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-500/20">
-              <Sparkles className="h-4 w-4" />
+          <div className="flex items-center gap-3">
+            <ProsperityEmblem size="md" className="!h-11 !w-11" />
+            <div className="flex flex-col">
+              <span className="font-black tracking-wider text-neutral-100 text-sm leading-tight">
+                PROSPERITY
+              </span>
+              <span className="text-[11px] font-black text-sky-400 tracking-widest leading-none mt-0.5">
+                AI
+              </span>
             </div>
-            <span className="font-bold tracking-wider text-neutral-100 text-sm">
-              PROSPERITY
-            </span>
           </div>
 
           <div className="flex items-center gap-1">

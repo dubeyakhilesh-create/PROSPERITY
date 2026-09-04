@@ -3,6 +3,8 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Message, Attachment } from '../types';
 import { CodeBlock } from './CodeBlock';
+import { ThinkingBlock } from './ThinkingBlock';
+import { ProsperityEmblem } from './ProsperityLogo';
 import { formatTimestamp, speakText, stopSpeaking, isSpeaking } from '../lib/utils';
 import {
   Sparkles,
@@ -19,6 +21,8 @@ import {
   Pencil,
   Eye,
   X,
+  Zap,
+  ArrowRight,
 } from 'lucide-react';
 
 interface ChatMessageProps {
@@ -26,6 +30,7 @@ interface ChatMessageProps {
   isLast: boolean;
   onRegenerate?: () => void;
   onEditPrompt?: (content: string) => void;
+  onSelectFollowUp?: (query: string) => void;
 }
 
 export const ChatMessage: React.FC<ChatMessageProps> = ({
@@ -33,6 +38,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
   isLast,
   onRegenerate,
   onEditPrompt,
+  onSelectFollowUp,
 }) => {
   const isUser = message.role === 'user';
   const [copied, setCopied] = useState(false);
@@ -82,30 +88,34 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
       {/* Avatar */}
       <div className="flex-shrink-0 pt-0.5">
         {isUser ? (
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 font-semibold text-white shadow-md shadow-indigo-500/20">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 font-semibold text-white shadow-md shadow-indigo-500/20">
             <User className="h-4 w-4" />
           </div>
         ) : (
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-tr from-violet-600 via-indigo-600 to-cyan-500 font-semibold text-white shadow-md shadow-violet-500/20 ring-1 ring-violet-400/30">
-            <Sparkles className="h-4 w-4 text-white animate-pulse" />
-          </div>
+          <ProsperityEmblem size="sm" className="!h-9 !w-9 shadow-md shadow-sky-500/15" />
         )}
       </div>
 
       {/* Message Content Container */}
       <div className="min-w-0 flex-1 space-y-3">
         {/* Header (Role & Time) */}
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold tracking-tight text-neutral-200">
-            {isUser ? 'You' : 'PROSPERITY'}
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-sm font-bold tracking-tight text-neutral-200">
+            {isUser ? 'You' : 'PROSPERITY AI'}
           </span>
           <span className="text-xs text-neutral-500">
             {formatTimestamp(message.timestamp)}
           </span>
+          {!isUser && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-indigo-950/80 px-2 py-0.5 text-[10px] font-medium text-indigo-300 ring-1 ring-indigo-800/40">
+              <Zap className="h-2.5 w-2.5 text-indigo-400" />
+              {message.modelUsed || 'Gemini 3.8 Flash'}
+            </span>
+          )}
           {!isUser && message.groundingMetadata?.webSearchQueries && (
             <span className="inline-flex items-center gap-1 rounded-full bg-cyan-950/80 px-2 py-0.5 text-[10px] font-medium text-cyan-400 ring-1 ring-cyan-800/40">
               <Globe className="h-2.5 w-2.5" />
-              Web Grounded
+              Live Web
             </span>
           )}
         </div>
@@ -146,6 +156,15 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
               </div>
             ))}
           </div>
+        )}
+
+        {/* Thinking & Reasoning Block (like ChatGPT o1/o3 / Grok Think) */}
+        {!isUser && (message.thought || (message.isStreaming && !message.content)) && (
+          <ThinkingBlock
+            thought={message.thought || ''}
+            isStreaming={message.isStreaming && !message.content}
+            thinkingTimeMs={message.thinkingTimeMs}
+          />
         )}
 
         {/* Text Body / Markdown */}
@@ -298,59 +317,91 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
           </div>
         )}
 
+        {/* Suggested Follow-up Prompts (like Google / Perplexity / ChatGPT) */}
+        {!isUser && !message.isStreaming && message.suggestedFollowUps && message.suggestedFollowUps.length > 0 && (
+          <div className="mt-3.5 border-t border-neutral-800/60 pt-3">
+            <p className="mb-2 flex items-center gap-1.5 text-xs font-medium text-neutral-400">
+              <Sparkles className="h-3 w-3 text-indigo-400" />
+              <span>Suggested follow-ups</span>
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {message.suggestedFollowUps.map((prompt, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => onSelectFollowUp?.(prompt)}
+                  className="flex items-center gap-1.5 rounded-xl border border-neutral-800 bg-neutral-900/90 px-3 py-1.5 text-xs text-neutral-300 transition-all hover:border-indigo-500/50 hover:bg-indigo-950/30 hover:text-indigo-200 active:scale-95 text-left"
+                >
+                  <span className="truncate max-w-[280px]">{prompt}</span>
+                  <ArrowRight className="h-3 w-3 flex-shrink-0 text-neutral-500" />
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Action Toolbar */}
         {!message.isStreaming && message.content && (
-          <div className="flex items-center gap-1.5 pt-1 text-neutral-400 opacity-80 transition-opacity group-hover:opacity-100">
-            <button
-              id={`copy-msg-${message.id}`}
-              onClick={handleCopy}
-              className="flex items-center gap-1 rounded-md p-1.5 text-xs text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200 transition-all"
-              title="Copy message"
-            >
-              {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
-              <span className="text-[11px]">{copied ? 'Copied' : 'Copy'}</span>
-            </button>
-
-            {!isUser && (
-              <>
-                <button
-                  id={`speak-msg-${message.id}`}
-                  onClick={handleToggleSpeak}
-                  className={`flex items-center gap-1 rounded-md p-1.5 text-xs transition-all ${
-                    speaking
-                      ? 'bg-indigo-950/80 text-indigo-400 ring-1 ring-indigo-700/50'
-                      : 'text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200'
-                  }`}
-                  title={speaking ? 'Stop speech' : 'Read aloud'}
-                >
-                  {speaking ? <VolumeX className="h-3.5 w-3.5 text-indigo-400 animate-pulse" /> : <Volume2 className="h-3.5 w-3.5" />}
-                  <span className="text-[11px]">{speaking ? 'Speaking...' : 'Read'}</span>
-                </button>
-
-                {isLast && onRegenerate && (
-                  <button
-                    id={`regenerate-msg-${message.id}`}
-                    onClick={onRegenerate}
-                    className="flex items-center gap-1 rounded-md p-1.5 text-xs text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200 transition-all"
-                    title="Regenerate response"
-                  >
-                    <RotateCw className="h-3.5 w-3.5" />
-                    <span className="text-[11px]">Regenerate</span>
-                  </button>
-                )}
-              </>
-            )}
-
-            {isUser && onEditPrompt && (
+          <div className="flex flex-wrap items-center justify-between pt-1 gap-2">
+            <div className="flex items-center gap-1.5 text-neutral-400 opacity-80 transition-opacity group-hover:opacity-100">
               <button
-                id={`edit-prompt-${message.id}`}
-                onClick={() => onEditPrompt(message.content)}
+                id={`copy-msg-${message.id}`}
+                onClick={handleCopy}
                 className="flex items-center gap-1 rounded-md p-1.5 text-xs text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200 transition-all"
-                title="Edit and resend"
+                title="Copy message"
               >
-                <Pencil className="h-3.5 w-3.5" />
-                <span className="text-[11px]">Edit</span>
+                {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                <span className="text-[11px]">{copied ? 'Copied' : 'Copy'}</span>
               </button>
+
+              {!isUser && (
+                <>
+                  <button
+                    id={`speak-msg-${message.id}`}
+                    onClick={handleToggleSpeak}
+                    className={`flex items-center gap-1 rounded-md p-1.5 text-xs transition-all ${
+                      speaking
+                        ? 'bg-indigo-950/80 text-indigo-400 ring-1 ring-indigo-700/50'
+                        : 'text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200'
+                    }`}
+                    title={speaking ? 'Stop speech' : 'Read aloud'}
+                  >
+                    {speaking ? <VolumeX className="h-3.5 w-3.5 text-indigo-400 animate-pulse" /> : <Volume2 className="h-3.5 w-3.5" />}
+                    <span className="text-[11px]">{speaking ? 'Speaking...' : 'Read'}</span>
+                  </button>
+
+                  {isLast && onRegenerate && (
+                    <button
+                      id={`regenerate-msg-${message.id}`}
+                      onClick={onRegenerate}
+                      className="flex items-center gap-1 rounded-md p-1.5 text-xs text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200 transition-all"
+                      title="Regenerate response"
+                    >
+                      <RotateCw className="h-3.5 w-3.5" />
+                      <span className="text-[11px]">Regenerate</span>
+                    </button>
+                  )}
+                </>
+              )}
+
+              {isUser && onEditPrompt && (
+                <button
+                  id={`edit-prompt-${message.id}`}
+                  onClick={() => onEditPrompt(message.content)}
+                  className="flex items-center gap-1 rounded-md p-1.5 text-xs text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200 transition-all"
+                  title="Edit and resend"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                  <span className="text-[11px]">Edit</span>
+                </button>
+              )}
+            </div>
+
+            {/* Performance telemetry pill */}
+            {!isUser && message.generationDurationMs && (
+              <span className="text-[10px] text-neutral-500 font-mono">
+                ⚡ {(message.generationDurationMs / 1000).toFixed(2)}s · Gemini 3.8 Flash
+              </span>
             )}
           </div>
         )}

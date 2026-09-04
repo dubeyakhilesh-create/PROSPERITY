@@ -34,6 +34,10 @@ export interface Message {
   error?: string;
   groundingMetadata?: GroundingMetadata;
   modelUsed?: string;
+  thought?: string; // Reasoning trace from Gemini 3
+  thinkingTimeMs?: number;
+  generationDurationMs?: number;
+  suggestedFollowUps?: string[];
 }
 
 export interface Persona {
@@ -48,8 +52,12 @@ export interface Persona {
 }
 
 export type ThinkingLevelOption = 'DEFAULT' | 'HIGH' | 'LOW' | 'MINIMAL';
+export type CapabilityMode = 'turbo' | 'reasoning' | 'web' | 'code';
+export type ModelChoice = 'gemini-3.8-flash' | 'gemini-3.1-flash-lite';
 
 export interface ModelSettings {
+  model?: ModelChoice;
+  capabilityMode?: CapabilityMode;
   temperature: number;
   thinkingLevel: ThinkingLevelOption;
   enableSearchGrounding: boolean;

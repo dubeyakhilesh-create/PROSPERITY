@@ -1,0 +1,43 @@
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 220" width="880" height="220">
+  <defs>
+    <linearGradient id="hzBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F172A" />
+      <stop offset="50%" stop-color="#090D1A" />
+      <stop offset="100%" stop-color="#020617" />
+    </linearGradient>
+    <linearGradient id="hzTextGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#F1F5F9" />
+    </linearGradient>
+    <linearGradient id="hzAiGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8" />
+      <stop offset="100%" stop-color="#60A5FA" />
+    </linearGradient>
+    <filter id="hzGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#0284C7" flood-opacity="0.35" />
+    </filter>
+  </defs>
+
+  
+  <rect width="880" height="220" rx="44" fill="url(#hzBgGrad)" />
+  <rect width="872" height="212" x="4" y="4" rx="40" fill="none" stroke="#38BDF8" stroke-opacity="0.3" stroke-width="6" />
+  
+
+  <!-- Single high-visibility line: PROSPERITY AI in demanded 4:1 ratio -->
+  <g transform="translate(440, 138)">
+    <text x="0" y="0" text-anchor="middle">
+      <tspan font-family="'Liberation Sans', 'DejaVu Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+             font-size="82"
+             font-weight="900"
+             letter-spacing="6"
+             fill="url(#hzTextGrad)">PROSPERITY </tspan>
+      <tspan font-family="'Liberation Sans', 'DejaVu Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+             font-size="82"
+             font-weight="900"
+             letter-spacing="10"
+             filter="url(#hzGlow)"
+             fill="url(#hzAiGrad)">AI</tspan>
+    </text>
+  </g>
+</svg>
